@@ -17,10 +17,14 @@ class callback:
 		self.lastParam = slice[param]
 		print time.ctime(), self.lastParam
 
+	def onEvent(self, logtime, version, event):
+		print time.ctime(), event
+
 cb = callback()
 
 parser = Parser()
 parser.addSliceCallback(cb.onSlice)
+parser.addEventCallback(cb.onEvent)
 
 link = BaseLink(port)
 link.addCallback(parser.update)
