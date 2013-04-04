@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 from ZeoRawData.BaseLink import BaseLink
 from ZeoRawData.Parser import Parser
 
@@ -9,16 +11,15 @@ port = '/dev/ttyUSB0'
 param = 'SleepStage'
 
 class callback:
-	lastParam = ''
-
 	def onSlice(self, slice):
-		if slice[param] == self.lastParam:
+		if slice['SleepStage'] is None:
 			return
-		self.lastParam = slice[param]
-		print time.ctime(), self.lastParam
+		print(time.ctime(), slice['BadSignal'], slice['SleepStage'], slice['SQI'], slice['Impedance'],
+		       [slice['FrequencyBins'].get(x, 0) for x in [
+			   '11-14', '2-4', '4-8', '8-13', '13-18', '18-21', '30-50']])
 
 	def onEvent(self, logtime, version, event):
-		print time.ctime(), event
+		print(time.ctime(), event)
 
 cb = callback()
 
