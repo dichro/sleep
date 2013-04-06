@@ -10,13 +10,18 @@ import time
 port = '/dev/ttyUSB0'
 param = 'SleepStage'
 
+bins = ['11-14', '2-4', '4-8', '8-13', '13-18', '18-21', '30-50']
 class callback:
+	accumulator = {}
+
 	def onSlice(self, slice):
+		for bin in bins:
+			self.accumulator[bin] = self.accumulator.get(bin, 0) + slice['FrequencyBins'].get(bin, 0)
 		if slice['SleepStage'] is None:
 			return
 		print(time.ctime(), slice['BadSignal'], slice['SleepStage'], slice['SQI'], slice['Impedance'],
-		       [slice['FrequencyBins'].get(x, 0) for x in [
-			   '11-14', '2-4', '4-8', '8-13', '13-18', '18-21', '30-50']])
+		       [self.accumulator.get(x, 0) for x in bins])
+		self.accumulator = {}
 
 	def onEvent(self, logtime, version, event):
 		print(time.ctime(), event)
