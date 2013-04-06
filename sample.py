@@ -11,26 +11,47 @@ port = '/dev/ttyUSB0'
 param = 'SleepStage'
 
 bins = ['11-14', '2-4', '4-8', '8-13', '13-18', '18-21', '30-50']
-class callback:
-	accumulator = {}
+
+class Act:
+	tracking = True
 
 	def onSlice(self, slice):
-		for bin in bins:
-			self.accumulator[bin] = self.accumulator.get(bin, 0) + slice['FrequencyBins'].get(bin, 0)
-		if slice['SleepStage'] is None:
+		if not self.tracking:
 			return
-		print(time.ctime(), slice['BadSignal'], slice['SleepStage'], slice['SQI'], slice['Impedance'],
-		       [self.accumulator.get(x, 0) for x in bins])
-		self.accumulator = {}
+		try:
+			gamma = slice['FrequencyBins']['30-50']
+		except KeyError, e:
+			print(e, slice)
+		print(gamma)
 
 	def onEvent(self, logtime, version, event):
-		print(time.ctime(), event)
+		if event == 'HeadbandUndocked':
+			self.tracking = True
+		if event == 'HeadbandDocked':
+			# TODO(dichro): reset
+			self.tracking = False
 
-cb = callback()
+
+class Log:
+	def __init__(self, filebase):
+		self.file = open(filebase + time.strftime('_%Y%m%d-%H%M%S.log'), 'w')
+
+	def onSlice(self, slice):
+		print(time.ctime(), slice, file=self.file)
+
+	def onEvent(self, logtime, version, event):
+		print(time.ctime(), event, file=self.file)
+
 
 parser = Parser()
-parser.addSliceCallback(cb.onSlice)
-parser.addEventCallback(cb.onEvent)
+
+log = Log('/tmp/zeo')
+parser.addSliceCallback(log.onSlice)
+parser.addEventCallback(log.onEvent)
+
+act = Act()
+parser.addSliceCallback(act.onSlice)
+parser.addEventCallback(act.onEvent)
 
 link = BaseLink(port)
 link.addCallback(parser.update)
