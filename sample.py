@@ -8,6 +8,7 @@ from onkyo import Receiver
 
 import math
 import time
+import urllib2
 
 port = '/dev/ttyUSB0'
 param = 'SleepStage'
@@ -53,8 +54,9 @@ class Act:
 		'''Turns on lights and plays music.'''
 		print(time.ctime(), 'waking up after', self.sleptSeconds,
 			'sleep; awake for', self.awakeSeconds)
-		# urllib?
+		urllib2.urlopen('http://localhost:10443/wakeUp')
 		Receiver().start()
+
 
 class Log:
 	def __init__(self, filebase):
