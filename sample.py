@@ -26,16 +26,20 @@ class Act:
 		if not self.sampling:
 			return
 		if not slice['BadSignal']:
-			if slice['FrequencyBins']['30-50'] < self.gammaThreshold:
-				self.awakeSeconds = 0
-				self.asleepSeconds += 1
-			else:
-				self.awakeSeconds += 1
-				self.asleepSeconds = 0
+			try:
+				if slice['FrequencyBins']['30-50'] < self.gammaThreshold:
+					self.awakeSeconds = 0
+					self.asleepSeconds += 1
+				else:
+					self.awakeSeconds += 1
+					self.asleepSeconds = 0
+			except KeyError, e:
+				pass
 		if self.asleepSeconds > 30:
 			self.sleptSeconds += 1
 		if self.awakeSeconds > 120 and self.sleptSeconds > 6 * 3600:
 			self.wakeUp()
+		print(time.ctime(), self.sampling, self.sleptSeconds, self.awakeSeconds, self.asleepSeconds)
 
 	def onEvent(self, logtime, version, event):
 		if event == 'HeadbandUndocked':
@@ -47,7 +51,7 @@ class Act:
 	def reset(self, sampling):
 		self.sampling = sampling
 		self.awakeSeconds = 0
-		self.sleepingSeconds = 0
+		self.asleepSeconds = 0
 		self.sleptSeconds = 0
 	
 	def wakeUp(self):
@@ -56,6 +60,7 @@ class Act:
 			'sleep; awake for', self.awakeSeconds)
 		urllib2.urlopen('http://localhost:10443/wakeUp')
 		Receiver().start()
+		self.reset(False)
 
 
 class Log:
